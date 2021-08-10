@@ -1,24 +1,35 @@
 package com.jwtserver.jwt.config;
 
-import com.jwtserver.jwt.config.jwConfig.JwtAuthenticationFilter;
-import com.jwtserver.jwt.filter.MyFilter3;
+import com.jwtserver.jwt.config.jwtFilter.JwtAuthenticationFilter;
+import com.jwtserver.jwt.config.jwtFilter.JwtAuthorizationFilter;
+import com.jwtserver.jwt.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.filter.CorsFilter;
 
 
-@Configuration
-@EnableWebSecurity
 @RequiredArgsConstructor
+@EnableWebSecurity
+@Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final CorsFilter corsFilter;
+//    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final UserRepository userRepository;
+
+    // 정적 자원에 대해 시큐리티 적용하지 않는다.
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -32,6 +43,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin().disable()//폼 로그인 비홠성화
                 .httpBasic().disable()
                 .addFilter(new JwtAuthenticationFilter(authenticationManager()))//AuthenticationManager를 파라미터로 넣어줘야함
+                .addFilter(new JwtAuthorizationFilter(authenticationManager(), userRepository))//AuthenticationManager를 파라미터로 넣어줘야함
                 .authorizeRequests()
                 .antMatchers("/api/v1/user/**")
                 .access("hasRole('ROLE_USER') or hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')")

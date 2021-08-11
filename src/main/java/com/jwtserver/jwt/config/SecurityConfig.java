@@ -26,10 +26,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserRepository userRepository;
 
     // 정적 자원에 대해 시큐리티 적용하지 않는다.
-//    @Override
-//    public void configure(WebSecurity web) throws Exception {
-//        web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
-//    }
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -40,8 +40,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)//세션을 사용하지 않습니다.
                 .and()
                 .addFilter(corsFilter)//cors요청이 와도 요 필터땜에 허용된다.//@CrossOrigin은 인증이 없으면 거부됨
-                .formLogin().disable()//폼 로그인 비홠성화
-                .httpBasic().disable()
+//                .formLogin().disable()//폼 로그인 비홠성화
+//                .httpBasic().disable()
                 .addFilter(new JwtAuthenticationFilter(authenticationManager()))//AuthenticationManager를 파라미터로 넣어줘야함
                 .addFilter(new JwtAuthorizationFilter(authenticationManager(), userRepository))//AuthenticationManager를 파라미터로 넣어줘야함
                 .authorizeRequests()

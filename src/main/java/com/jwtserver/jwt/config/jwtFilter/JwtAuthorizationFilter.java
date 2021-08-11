@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -30,39 +31,57 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         this.userRepository = userRepository;
     }
 
-    //인증이나 권한이 필요한 주소요청이 있을 때, 해당 필터를 타게 된다.
+    //인증이나 권한이 필요한 주소요청이 왔을 때, 해당 필터를 타게 된다.
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-//        super.doFilterInternal(request, response, chain);
         System.out.println("BasicAuthenticationFilter에서 인증, 권한 요청을 확인");
-        String jwtheader = request.getHeader("Authorization");
-        System.out.println("jwtheader = " + jwtheader);
+//        String jwtheader = request.getHeader("Authorization");
+//        System.out.println("jwtheader = " + jwtheader);
 
+        final Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            System.out.println( cookie.getName()+ cookie.getValue());
+        }
+        chain.doFilter(request, response);
         //header가 있는지 확인
-        if(jwtheader == null || !jwtheader.startsWith("Bearer")){
-            chain.doFilter(request, response);
-            return;
-        }
+//        if(jwtheader == null || !jwtheader.startsWith("Bearer")){
+//            chain.doFilter(request, response);
+//            return;
+//        }
         //jwt토큰을 검증하여 정상적인 사용자인지 확인하기
-        String jwtToken = jwtheader.replace("Bearer ", "");
-        String username =
-                JWT.require(Algorithm.HMAC512(JwtProperties.SECRET)).build()
-                        .verify(jwtToken)
-                        .getClaim("username")
-                        .asString();
+//        String jwtToken = jwtheader.replace("Bearer ", "");
+//        String username =
+//                JWT.require(Algorithm.HMAC512(JwtProperties.ACCESS_SECRET)).build()
+//                        .verify(jwtToken)
+//                        .getClaim("username")
+//                        .asString();
+//        String role =
+//                JWT.require(Algorithm.HMAC512(JwtProperties.REFRESH_SECRET)).build()
+//                        .verify(jwtToken)
+//                        .getClaim("role")
+//                        .asString();
+
         //서명 정상적으로 됨
-        if(username!=null){
-            User userEntity = userRepository.findByUsername(username);
-
-            PrincipalDetails principalDetails = new PrincipalDetails(userEntity);
-
-            //Jwt 토큰 서명을 통해 서명이 정상이면 Authentication객체 강제로 만들기.// 인증 완료 후의 객체생성
-            Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails,
-                    null, principalDetails.getAuthorities());
-            // SecurityContextHolder.getContext(): 세션공간 찾고, setAuthentication(authentication):authentication객체 넣기
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            chain.doFilter(request, response);
+//        if(username!=null){
+//            User userEntity = userRepository.findByUsername(username);
+//
+//            PrincipalDetails principalDetails = new PrincipalDetails(userEntity);
+//
+//            //Jwt 토큰 서명을 통해 서명이 정상이면 Authentication객체 강제로 만들기.// 인증 완료 후의 객체생성
+//            Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails,
+//                    null, principalDetails.getAuthorities());
+//            // SecurityContextHolder.getContext(): 세션공간 찾고, setAuthentication(authentication):authentication객체 넣기
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//            chain.doFilter(request, response);
+//        }
+    }
+    public String resolveCookie(HttpServletRequest request) {
+        final Cookie[] cookies = request.getCookies();
+        if (cookies == null) return null;
+        for (Cookie cookie : cookies) {
+            System.out.println( cookie.getName()+ cookie.getValue());
         }
+        return null;
     }
 }
